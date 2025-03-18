@@ -1,36 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MarketMetric
+
+MarketMetric is an application that analyzes market research reports using LLM technology to score them based on 10 key criteria.
+
+## Features
+
+- **PDF Upload**: Users can upload market research report PDFs
+- **AI Analysis**: Reports are analyzed by an LLM (deepseek-r1-distill-llama-70b via Groq)
+- **10-Point Scoring**: Each report receives a score out of 10 based on key criteria
+- **Report Storage**: Reports are stored securely in Supabase storage
+- **User Authentication**: Secure login and registration via Supabase Auth
+
+## Scoring Criteria
+
+The LLM evaluates market reports based on these criteria:
+
+1. Publication date included
+2. Author or research organization identified
+3. Total Addressable Market (TAM) values provided
+4. Compound Annual Growth Rate (CAGR) presented
+5. Distinct customer segments identified
+6. Competitive landscape described
+7. Emerging technologies or innovations included
+8. Industry trends discussed
+9. Regional or geographic breakdown provided
+10. Regulatory requirements identified
+
+## Technology Stack
+
+- **Frontend**: Next.js 15 (React 19, TypeScript)
+- **UI**: TailwindCSS
+- **Backend**: Supabase (PostgreSQL)
+- **Storage**: Supabase Storage
+- **Authentication**: Supabase Auth
+- **LLM**: Groq API with deepseek-r1-distill-llama-70b
+- **PDF Processing**: pdf-parse
 
 ## Getting Started
 
-First, run the development server:
+1. Clone the repository
+2. Install dependencies:
+   ```
+   npm install
+   ```
+3. Set up environment variables in `.env.local`:
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   GROQ_API_KEY=your_groq_api_key
+   GROQ_API_BASE_URL=https://api.groq.com/openai/v1
+   GROQ_API_MODEL=deepseek-r1-distill-llama-70b
+   ```
+4. Run the development server:
+   ```
+   npm run dev
+   ```
+5. Open [http://localhost:3000](http://localhost:3000) to view the application
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Supabase Setup
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1. Create a new Supabase project
+2. Run the schema SQL (`supabase/schema.sql`)
+3. Run the storage SQL (`supabase/storage.sql`)
+4. Enable Authentication
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Planned Features
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- URL ingestion for generating PDFs from web content
+- Custom question configuration
+- Report dashboard with history
+- Vercel deployment
 
-## Learn More
+## License
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
