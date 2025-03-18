@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FiUpload } from 'react-icons/fi';
@@ -27,18 +29,24 @@ export default function FileUpload({ onFileUploaded }: FileUploadProps) {
         setUploading(true);
         setError(null);
         
-        // Upload file to Supabase storage
-        const fileName = `${Date.now()}_${file.name}`;
+        // Generate a unique file name to prevent collisions
+        const fileName = `${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+        
+        // Upload the file to Supabase storage
         const { data, error: uploadError } = await supabase.storage
           .from('market-reports')
-          .upload(fileName, file);
-
+          .upload(`reports/${fileName}`, file);
+        
         if (uploadError) {
           throw uploadError;
         }
-
-        // Success - call the callback with the file path
-        onFileUploaded(data.path, file.name);
+        
+        // Get the file path
+        const filePath = data.path;
+        
+        // Pass the file info back to the parent component
+        onFileUploaded(filePath, file.name);
+        
       } catch (err) {
         console.error('Error uploading file:', err);
         setError('Error uploading file. Please try again.');
