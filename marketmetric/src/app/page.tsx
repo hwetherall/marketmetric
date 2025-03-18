@@ -19,6 +19,7 @@ export default function Home() {
 
   // Handle file upload success
   const handleFileUploaded = async (filePath: string, fileName: string) => {
+    console.log(`File uploaded: ${fileName} at path: ${filePath}`);
     setUploadedFile({ path: filePath, name: fileName });
     setResults(null);
     setError(null);
@@ -32,6 +33,8 @@ export default function Home() {
     setError(null);
     
     try {
+      console.log(`Analyzing file: ${uploadedFile.name}, path: ${uploadedFile.path}`);
+      
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: {
@@ -44,16 +47,18 @@ export default function Home() {
         }),
       });
 
-      const data = await response.json();
-      
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to analyze report');
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Server error: ${response.status}`);
       }
 
+      const data = await response.json();
+      console.log('Analysis results:', data);
+      
       setResults(data.results);
     } catch (err) {
       console.error('Error analyzing report:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred during analysis');
+      setError(err instanceof Error ? `Analysis error: ${err.message}` : 'An error occurred during analysis');
     } finally {
       setAnalyzing(false);
     }

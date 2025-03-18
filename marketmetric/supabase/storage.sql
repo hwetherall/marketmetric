@@ -1,28 +1,28 @@
 -- Create a storage bucket for market reports
 INSERT INTO storage.buckets (id, name, public)
-VALUES ('market-reports', 'market-reports', false);
+VALUES ('market-reports', 'market-reports', true);
 
--- Allow authenticated users to upload and download their files
-CREATE POLICY "Allow authenticated users to upload files"
+-- Allow anyone to upload files (no auth required)
+CREATE POLICY "Allow public uploads to market-reports"
   ON storage.objects
   FOR INSERT
-  TO authenticated
+  TO public
   WITH CHECK (bucket_id = 'market-reports');
 
-CREATE POLICY "Allow users to access their files"
+CREATE POLICY "Allow public access to market-reports"
   ON storage.objects
   FOR SELECT
-  TO authenticated
-  USING (bucket_id = 'market-reports' AND auth.uid() = owner);
+  TO public
+  USING (bucket_id = 'market-reports');
 
-CREATE POLICY "Allow users to update their files"
+CREATE POLICY "Allow public to update files in market-reports"
   ON storage.objects
   FOR UPDATE
-  TO authenticated
-  USING (bucket_id = 'market-reports' AND auth.uid() = owner);
+  TO public
+  USING (bucket_id = 'market-reports');
 
-CREATE POLICY "Allow users to delete their files"
+CREATE POLICY "Allow public to delete files in market-reports"
   ON storage.objects
   FOR DELETE
-  TO authenticated
-  USING (bucket_id = 'market-reports' AND auth.uid() = owner); 
+  TO public
+  USING (bucket_id = 'market-reports'); 
