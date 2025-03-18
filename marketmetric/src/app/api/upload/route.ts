@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import supabaseAdmin from '@/app/lib/supabase-admin';
 
+// Ensure this route is always handled dynamically and not cached
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();

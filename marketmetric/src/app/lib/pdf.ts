@@ -1,4 +1,6 @@
 import pdfParse from 'pdf-parse';
+import path from 'path';
+import fs from 'fs';
 
 /**
  * Extracts text content from a PDF file
@@ -14,6 +16,26 @@ export async function extractTextFromPDF(pdfBuffer: ArrayBuffer, useLocalFallbac
   if (useLocalFallback || !pdfBuffer || pdfBuffer.byteLength === 0) {
     console.log('Using mock PDF text for testing');
     return getMockPdfText();
+  }
+  
+  // Create the test directory if it doesn't exist
+  // This is to handle pdf-parse looking for test files
+  try {
+    if (process.env.NODE_ENV === 'production') {
+      const testDir = path.join(process.cwd(), 'test', 'data');
+      if (!fs.existsSync(testDir)) {
+        fs.mkdirSync(testDir, { recursive: true });
+      }
+      
+      // Create an empty placeholder file if it doesn't exist
+      const testFile = path.join(testDir, '05-versions-space.pdf');
+      if (!fs.existsSync(testFile)) {
+        fs.writeFileSync(testFile, '');
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to create test directory or file:', err);
+    // Continue with processing - this is just a preventative measure
   }
   
   try {
