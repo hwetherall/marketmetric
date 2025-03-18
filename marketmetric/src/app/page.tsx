@@ -39,6 +39,9 @@ export default function Home() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          // Add a custom header to help identify our request
+          'X-Request-Type': 'json-api-call'
         },
         body: JSON.stringify({
           filePath: uploadedFile.path,
@@ -47,13 +50,46 @@ export default function Home() {
         }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Server error: ${response.status}`);
+      // First check the content type to detect HTML error responses
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('text/html')) {
+        console.error('Received HTML response instead of JSON');
+        const htmlText = await response.text();
+        console.error('HTML response:', htmlText.substring(0, 500)); // Log first 500 chars
+        throw new Error('Server returned HTML instead of JSON. This usually indicates a server error. Please check server logs for details.');
       }
 
-      const data = await response.json();
+      if (!response.ok) {
+        let errorMessage = `Server error: ${response.status}`;
+        
+        try {
+          const errorData = await response.json();
+          if (errorData && errorData.error) {
+            errorMessage = errorData.error;
+            if (errorData.details) {
+              errorMessage += `: ${errorData.details}`;
+            }
+          }
+        } catch (jsonError) {
+          console.error('Error parsing error response:', jsonError);
+        }
+        
+        throw new Error(errorMessage);
+      }
+
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        console.error('Error parsing JSON response:', jsonError);
+        throw new Error('Failed to parse server response. Received invalid JSON.');
+      }
+      
       console.log('Analysis results:', data);
+      
+      if (!data.results) {
+        throw new Error('Server response missing results object');
+      }
       
       setResults(data.results);
     } catch (err) {

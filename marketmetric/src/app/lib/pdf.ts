@@ -14,11 +14,41 @@ export async function extractTextFromPDF(pdfBuffer: ArrayBuffer, useLocalFallbac
   }
   
   try {
+    console.log(`Converting ArrayBuffer to Buffer for pdf-parse, size: ${pdfBuffer.byteLength} bytes`);
     // Convert ArrayBuffer to Buffer for pdf-parse
     const buffer = Buffer.from(pdfBuffer);
+    console.log(`Buffer created successfully, size: ${buffer.length} bytes`);
     
-    // Parse the PDF
-    const data = await pdfParse(buffer);
+    // Verify that the PDF buffer starts with the PDF signature
+    const isPDF = buffer.length > 4 && 
+                  buffer[0] === 0x25 && // %
+                  buffer[1] === 0x50 && // P
+                  buffer[2] === 0x44 && // D
+                  buffer[3] === 0x46;   // F
+    
+    if (!isPDF) {
+      console.warn('Warning: Buffer does not appear to be a valid PDF (missing PDF signature)');
+      console.log('First 16 bytes:', buffer.slice(0, 16).toString('hex'));
+      // Continue anyway as sometimes PDFs might not have the correct signature
+    }
+    
+    // Set options for pdf-parse
+    const options = {
+      max: 0, // 0 = unlimited pages
+      pagerender: undefined, // use default page renderer
+      version: 'v1.10.100' // specify pdf-parse version to avoid warnings
+    };
+    
+    // Parse the PDF with a timeout
+    console.log('Starting PDF parsing...');
+    const data = await Promise.race([
+      pdfParse(buffer),
+      new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('PDF parsing timed out after 30 seconds')), 30000)
+      )
+    ]);
+    
+    console.log(`PDF parsing completed, extracted ${data.text.length} characters`);
     
     // If the parsing was successful but returned no text, use the mock
     if (!data.text || data.text.trim().length === 0) {
@@ -29,8 +59,13 @@ export async function extractTextFromPDF(pdfBuffer: ArrayBuffer, useLocalFallbac
     return data.text;
   } catch (error) {
     console.error('Error parsing PDF:', error);
+    if (error instanceof Error) {
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
     
-    // Fall back to mock data on error
+    // For now, fall back to mock data on error
     console.warn('Using mock PDF text due to parsing error');
     return getMockPdfText();
   }
