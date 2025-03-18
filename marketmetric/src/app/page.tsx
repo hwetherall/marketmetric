@@ -26,79 +26,63 @@ export default function Home() {
   };
 
   // Handle analyze report button click
-  const handleAnalyzeReport = async () => {
-    if (!uploadedFile) return;
+const handleAnalyzeReport = async () => {
+  if (!uploadedFile) return;
 
-    setAnalyzing(true);
-    setError(null);
+  setAnalyzing(true);
+  setError(null);
+  
+  try {
+    console.log(`Analyzing file: ${uploadedFile.name}, path: ${uploadedFile.path}`);
     
-    try {
-      console.log(`Analyzing file: ${uploadedFile.name}, path: ${uploadedFile.path}`);
-      
-      const response = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          // Add a custom header to help identify our request
-          'X-Request-Type': 'json-api-call'
-        },
-        body: JSON.stringify({
-          filePath: uploadedFile.path,
-          fileName: uploadedFile.name,
-          userId: 'anonymous-user', // Since we're not using real auth
-        }),
-      });
+    const response = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        filePath: uploadedFile.path,
+        fileName: uploadedFile.name,
+        userId: 'anonymous-user',
+      }),
+    });
 
-      // First check the content type to detect HTML error responses
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('text/html')) {
-        console.error('Received HTML response instead of JSON');
-        const htmlText = await response.text();
-        console.error('HTML response:', htmlText.substring(0, 500)); // Log first 500 chars
-        throw new Error('Server returned HTML instead of JSON. This usually indicates a server error. Please check server logs for details.');
-      }
-
-      if (!response.ok) {
-        let errorMessage = `Server error: ${response.status}`;
-        
-        try {
-          const errorData = await response.json();
-          if (errorData && errorData.error) {
-            errorMessage = errorData.error;
-            if (errorData.details) {
-              errorMessage += `: ${errorData.details}`;
-            }
-          }
-        } catch (jsonError) {
-          console.error('Error parsing error response:', jsonError);
-        }
-        
-        throw new Error(errorMessage);
-      }
-
-      let data;
-      try {
-        data = await response.json();
-      } catch (jsonError) {
-        console.error('Error parsing JSON response:', jsonError);
-        throw new Error('Failed to parse server response. Received invalid JSON.');
-      }
+    // First check if the response is JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      console.error(`Received non-JSON response: ${contentType}`);
       
-      console.log('Analysis results:', data);
-      
-      if (!data.results) {
-        throw new Error('Server response missing results object');
-      }
-      
-      setResults(data.results);
-    } catch (err) {
-      console.error('Error analyzing report:', err);
-      setError(err instanceof Error ? `Analysis error: ${err.message}` : 'An error occurred during analysis');
-    } finally {
-      setAnalyzing(false);
+      // Try to get response text for debugging
+      const responseText = await response.text();
+      console.error('Response text:', responseText.substring(0, 500)); // Log first 500 chars
+      throw new Error('Server returned a non-JSON response. Please check server logs.');
     }
-  };
+
+    // Parse JSON response
+    const data = await response.json();
+    
+    // Check for error in the JSON response
+    if (!response.ok || data.error) {
+      const errorMessage = data.error || `Server returned status ${response.status}`;
+      const errorDetails = data.details ? `: ${data.details}` : '';
+      throw new Error(`${errorMessage}${errorDetails}`);
+    }
+    
+    // Check for valid results object
+    if (!data.results) {
+      throw new Error('Server response missing results object');
+    }
+    
+    console.log('Analysis results:', data.results);
+    setResults(data.results);
+  } catch (err) {
+    console.error('Error analyzing report:', err);
+    setError(err instanceof Error ? `Analysis error: ${err.message}` : 'An error occurred during analysis');
+  } finally {
+    setAnalyzing(false);
+  }
+};
 
   // Handle simple auth
   const handleAuth = (e: React.FormEvent) => {
