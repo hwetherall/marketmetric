@@ -130,7 +130,7 @@ const handleAnalyzeReport = async () => {
               type="submit"
               className="w-full bg-gradient-to-r from-primary-700 to-primary-800 text-white py-3 px-5 rounded-lg hover:from-primary-800 hover:to-primary-900 font-extrabold transition-all shadow-md hover:shadow-lg text-lg"
             >
-              Access Application
+              <span className="text-black font-black">Access Application</span>
             </button>
           </form>
           
