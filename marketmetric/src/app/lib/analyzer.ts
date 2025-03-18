@@ -21,7 +21,7 @@ const ANALYSIS_QUESTIONS = [
  */
 async function callGroqAPI(prompt: string): Promise<string> {
   const apiKey = process.env.GROQ_API_KEY;
-  const model = process.env.GROQ_API_MODEL || 'llama3-8b-8192';
+  const model = process.env.GROQ_API_MODEL || 'deepseek-r1-distill-llama-70b';
   
   if (!apiKey) {
     console.error('Missing Groq API key in environment variables');
@@ -141,8 +141,8 @@ export async function analyzeMarketReport(textContent: string): Promise<ReportRe
   }
   
   // Create a truncated version of the text content if it's too long
-  // Most LLMs have token limits, so we'll use the first ~8000 characters
-  const truncatedText = textContent.slice(0, 8000);
+  // Most LLMs have token limits, so we'll use a larger portion of the text
+  const truncatedText = textContent.slice(0, 30000);
   console.log(`Truncated text from ${textContent.length} to ${truncatedText.length} characters`);
   
   // Prepare the prompt for the LLM

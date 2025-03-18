@@ -1,26 +1,159 @@
 @import "tailwindcss";
 
 :root {
+  /* Base colors */
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #000000;
+  
+  /* Primary brand colors */
+  --primary-50: #eff6ff;
+  --primary-100: #dbeafe;
+  --primary-200: #bfdbfe;
+  --primary-300: #93c5fd;
+  --primary-400: #60a5fa;
+  --primary-500: #3b82f6;
+  --primary-600: #2563eb;
+  --primary-700: #1d4ed8;
+  --primary-800: #1e40af;
+  --primary-900: #1e3a8a;
+  
+  /* Accent colors */
+  --accent-50: #f5f3ff;
+  --accent-500: #8b5cf6;
+  --accent-600: #7c3aed;
+  
+  /* Success/Error colors */
+  --success: #047857;
+  --error: #b91c1c;
+  
+  /* Text colors - Pure black for maximum visibility */
+  --text-high: #000000;
+  --text-medium: #000000;
+  --text-low: #1f2937;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #111827;
+    --foreground: #ffffff;
+    
+    --text-high: #ffffff;
+    --text-medium: #ffffff;
+    --text-low: #f3f4f6;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), 'Inter', system-ui, -apple-system, sans-serif;
+  line-height: 1.6;
+  font-weight: 700;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Enhanced button styles for better visibility */
+button, 
+.button,
+[role="button"],
+a.button {
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+/* Ensure that all button text is visible */
+button.text-white, 
+.button.text-white,
+[role="button"].text-white,
+a.button.text-white {
+  color: white;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  text-shadow: 0px 1px 3px rgba(0,0,0,0.6);
+}
+
+/* Make text in gradient buttons more visible */
+.bg-gradient-to-r.text-white,
+button.bg-gradient-to-r .text-white,
+.button.bg-gradient-to-r .text-white {
+  text-shadow: 0px 1px 3px rgba(0,0,0,0.8);
+  font-weight: 900;
+  color: #ffffff;
+}
+
+/* High contrast button styles */
+.from-blue-900,
+.from-indigo-900,
+.bg-gray-800 {
+  color: #ffffff !important;
+}
+
+.from-blue-900 .text-white,
+.from-indigo-900 .text-white,
+.bg-gray-800 .text-white {
+  color: #ffffff !important;
+  text-shadow: 0px 2px 4px rgba(0,0,0,0.9);
+}
+
+/* Enhanced file upload box */
+.border-dashed.border-gray-800 {
+  border-color: #1f2937 !important;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
+}
+
+.border-dashed.border-primary-700 {
+  border-color: #1d4ed8 !important;
+}
+
+/* File upload button enhancements */
+div[role="presentation"] .bg-gray-300 {
+  background-color: #d1d5db !important;
+  border-color: #4b5563 !important;
+}
+
+/* Enhanced text in upload box */
+div[role="presentation"] p.text-black {
+  color: #000000 !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.01em;
+}
+
+div[role="presentation"] .text-black {
+  color: #000000 !important;
+}
+
+div[role="presentation"] .bg-gray-300 span {
+  color: #000000 !important;
+  text-shadow: 0 0.5px 0 rgba(0,0,0,0.1);
+}
+
+div[role="presentation"] .text-primary-900 {
+  color: #1e3a8a !important;
+}
+
+/* Ensure spinner icon is dark and visible */
+div[role="presentation"] .animate-spin.text-primary-900 {
+  color: #1e3a8a !important;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));
+  opacity: 1 !important;
+}
+
+/* Logout button enhancement */
+.font-black.text-black {
+  color: #000000 !important;
+  font-weight: 900 !important;
+  text-shadow: 0 0.5px 0 rgba(0,0,0,0.05);
+}
+
+.font-black.text-black svg {
+  color: #000000 !important;
+  filter: drop-shadow(0 0.5px 0 rgba(0,0,0,0.1));
 }

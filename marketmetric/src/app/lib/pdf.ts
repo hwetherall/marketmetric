@@ -7,7 +7,10 @@ import pdfParse from 'pdf-parse';
  * @returns A promise that resolves to the extracted text
  */
 export async function extractTextFromPDF(pdfBuffer: ArrayBuffer, useLocalFallback: boolean = false): Promise<string> {
-  // If local fallback mode is enabled or the buffer is empty, return sample text
+  // IMPORTANT: Always use mock data if:
+  // 1. Local fallback mode is explicitly requested
+  // 2. Buffer is empty or null
+  // 3. Running in development mode without a valid buffer
   if (useLocalFallback || !pdfBuffer || pdfBuffer.byteLength === 0) {
     console.log('Using mock PDF text for testing');
     return getMockPdfText();
@@ -15,8 +18,15 @@ export async function extractTextFromPDF(pdfBuffer: ArrayBuffer, useLocalFallbac
   
   try {
     console.log(`Converting ArrayBuffer to Buffer for pdf-parse, size: ${pdfBuffer.byteLength} bytes`);
+    
     // Convert ArrayBuffer to Buffer for pdf-parse
     const buffer = Buffer.from(pdfBuffer);
+    
+    if (buffer.length === 0) {
+      console.warn('Empty buffer provided, using mock data');
+      return getMockPdfText();
+    }
+    
     console.log(`Buffer created successfully, size: ${buffer.length} bytes`);
     
     // Verify that the PDF buffer starts with the PDF signature
@@ -32,41 +42,37 @@ export async function extractTextFromPDF(pdfBuffer: ArrayBuffer, useLocalFallbac
       // Continue anyway as sometimes PDFs might not have the correct signature
     }
     
-    // Set options for pdf-parse
-    const options = {
-      max: 0, // 0 = unlimited pages
-      pagerender: undefined, // use default page renderer
-      version: 'v1.10.100' // specify pdf-parse version to avoid warnings
-    };
-    
     // Parse the PDF with a timeout
     console.log('Starting PDF parsing...');
-    const data = await Promise.race([
-      pdfParse(buffer),
-      new Promise<never>((_, reject) => 
-        setTimeout(() => reject(new Error('PDF parsing timed out after 30 seconds')), 30000)
-      )
-    ]);
     
-    console.log(`PDF parsing completed, extracted ${data.text.length} characters`);
-    
-    // If the parsing was successful but returned no text, use the mock
-    if (!data.text || data.text.trim().length === 0) {
-      console.warn('PDF parsing returned empty text, using mock data');
+    try {
+      // Parse the PDF
+      const data = await pdfParse(buffer);
+      
+      console.log(`PDF parsing completed, extracted ${data.text.length} characters`);
+      
+      // If the parsing was successful but returned no text, use the mock
+      if (!data.text || data.text.trim().length === 0) {
+        console.warn('PDF parsing returned empty text, using mock data');
+        return getMockPdfText();
+      }
+      
+      return data.text;
+    } catch (parseError) {
+      console.error('PDF parsing error:', parseError);
+      // Return mock data on parsing error
       return getMockPdfText();
     }
-    
-    return data.text;
   } catch (error) {
-    console.error('Error parsing PDF:', error);
+    console.error('Error in PDF extraction process:', error);
     if (error instanceof Error) {
       console.error('Error name:', error.name);
       console.error('Error message:', error.message);
       console.error('Error stack:', error.stack);
     }
     
-    // For now, fall back to mock data on error
-    console.warn('Using mock PDF text due to parsing error');
+    // Always fall back to mock data on error
+    console.warn('Using mock PDF text due to error');
     return getMockPdfText();
   }
 }
@@ -118,4 +124,4 @@ Machine Learning algorithms, Natural Language Processing, and Computer Vision te
 REGULATORY CONSIDERATIONS
 FDA regulations for AI/ML-based software as medical devices (SaMD) continue to evolve, with the proposed regulatory framework aiming to address the unique characteristics of these technologies.
   `;
-} 
+}

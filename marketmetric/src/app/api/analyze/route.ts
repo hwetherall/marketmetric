@@ -11,6 +11,8 @@ function createJsonResponse(data: any, status: number = 200) {
       'Content-Type': 'application/json',
       // Disable caching to prevent stale responses
       'Cache-Control': 'no-store, max-age=0',
+      // Prevent Next.js from returning HTML error pages
+      'x-middleware-skip': '1'
     }
   });
 }
@@ -89,6 +91,11 @@ export async function POST(request: NextRequest) {
       console.log(`API: Successfully extracted ${textContent.length} characters of text`);
     } catch (pdfError) {
       console.error('API: PDF extraction error:', pdfError);
+      if (pdfError instanceof Error) {
+        console.error('API: Error name:', pdfError.name);
+        console.error('API: Error message:', pdfError.message);
+        console.error('API: Error stack:', pdfError.stack);
+      }
       return createJsonResponse({ 
         error: 'Error extracting text from PDF', 
         details: pdfError instanceof Error ? pdfError.message : 'Unknown PDF processing error' 
@@ -104,6 +111,12 @@ export async function POST(request: NextRequest) {
       console.log('API: Analysis completed successfully');
     } catch (analysisError) {
       console.error('API: LLM analysis error:', analysisError);
+      if (analysisError instanceof Error) {
+        console.error('API: Error name:', analysisError.name);
+        console.error('API: Error message:', analysisError.message);
+        console.error('API: Error stack:', analysisError.stack);
+      }
+      
       return createJsonResponse({ 
         error: 'Error analyzing content with LLM', 
         details: analysisError instanceof Error ? analysisError.message : 'Unknown LLM analysis error' 
@@ -111,11 +124,28 @@ export async function POST(request: NextRequest) {
     }
     
     // Return response
-    console.log('API: Preparing successful response');
-    return createJsonResponse({ results });
-    
+    try {
+      console.log('API: Preparing successful response');
+      const response = { results };
+      // Debug what's being returned
+      console.log('API: Response object:', JSON.stringify(response));
+      return createJsonResponse(response);
+    } catch (responseError) {
+      console.error('API: Error creating JSON response:', responseError);
+      return createJsonResponse({ 
+        error: 'Error creating JSON response', 
+        details: responseError instanceof Error ? responseError.message : 'Unknown response error' 
+      }, 500);
+    }
   } catch (error) {
     console.error('API: Unhandled error in analyze route:', error);
+    // Add more detailed error logging
+    if (error instanceof Error) {
+      console.error('API: Error name:', error.name);
+      console.error('API: Error message:', error.message);
+      console.error('API: Error stack:', error.stack);
+    }
+    
     return createJsonResponse({ 
       error: 'Error analyzing report', 
       details: error instanceof Error ? error.message : 'Unknown error'

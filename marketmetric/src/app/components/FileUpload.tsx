@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { FiUpload } from 'react-icons/fi';
+import { FiUpload, FiFile, FiLoader } from 'react-icons/fi';
 import supabase from '../lib/supabase';
 
 interface FileUploadProps {
@@ -121,30 +121,49 @@ export default function FileUpload({ onFileUploaded }: FileUploadProps) {
     <div>
       <div
         {...getRootProps()}
-        className={`p-8 border-2 border-dashed rounded-lg text-center cursor-pointer transition-colors ${
-          isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'
+        className={`p-8 border-4 border-dashed rounded-lg text-center cursor-pointer transition-all ${
+          isDragActive 
+            ? 'border-primary-700 bg-primary-100' 
+            : uploading 
+              ? 'border-gray-700 bg-gray-100'
+              : 'border-gray-800 hover:border-primary-700 hover:bg-primary-100'
         }`}
       >
         <input {...getInputProps()} />
         <div className="flex flex-col items-center justify-center">
-          <FiUpload className="w-12 h-12 mb-4 text-gray-400" />
           {uploading ? (
-            <p className="text-gray-600">Uploading...</p>
+            <FiLoader className="w-16 h-16 mb-4 text-primary-900 animate-spin" />
+          ) : (
+            <div className="w-20 h-20 mb-4 flex items-center justify-center rounded-full bg-primary-600 text-white">
+              <FiUpload className="w-10 h-10" />
+            </div>
+          )}
+          
+          {uploading ? (
+            <p className="text-black font-black text-xl">Uploading your report...</p>
           ) : (
             <>
-              <p className="mb-2 text-gray-700 font-medium">
-                {isDragActive ? 'Drop the PDF here' : 'Drag & drop a market report PDF here'}
+              <p className="mb-3 text-black font-black text-2xl">
+                {isDragActive ? 'Drop your PDF report here' : 'Drag & drop a market report PDF here'}
               </p>
-              <p className="text-sm text-gray-500">
-                or click to select a file (PDF only)
-              </p>
+              <div className="flex items-center gap-2 text-base font-extrabold text-black bg-gray-300 py-3 px-5 rounded-full border-2 border-gray-500">
+                <FiFile className="text-primary-900 w-5 h-5" />
+                <span>or click to select a file (PDF only)</span>
+              </div>
             </>
           )}
-          {error && <p className="mt-3 text-red-500 text-sm">{error}</p>}
+          {error && (
+            <div className="mt-4 p-4 bg-red-100 border-2 border-red-400 rounded-lg text-black text-base font-bold">
+              {error}
+            </div>
+          )}
         </div>
       </div>
       {usingFallback && (
-        <div className="mt-3 p-2 bg-yellow-50 border border-yellow-300 rounded text-sm text-yellow-700">
+        <div className="mt-4 p-4 bg-yellow-100 border-2 border-yellow-400 rounded-lg text-base text-black font-bold flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
           Using local storage fallback mode. This is for testing purposes only.
         </div>
       )}

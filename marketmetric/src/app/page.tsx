@@ -4,7 +4,7 @@ import { useState } from 'react';
 import FileUpload from './components/FileUpload';
 import ReportScore, { ReportResults } from './components/ReportScore';
 import { useSimpleAuth } from './context/SimpleAuthContext';
-import { FiLoader } from 'react-icons/fi';
+import { FiLoader, FiUpload, FiBarChart2, FiLogOut } from 'react-icons/fi';
 
 export default function Home() {
   const { isAuthenticated, login, logout } = useSimpleAuth();
@@ -98,21 +98,21 @@ const handleAnalyzeReport = async () => {
   // Auth form (simple password protection)
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
-          <h1 className="text-2xl font-bold mb-6 text-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-100 to-accent-100">
+        <div className="bg-white p-8 rounded-xl shadow-lg max-w-md w-full border-2 border-gray-300">
+          <h1 className="text-4xl font-extrabold mb-6 text-center text-black">
             MarketMetric
           </h1>
           
           {authError && (
-            <div className="bg-red-50 text-red-500 p-3 rounded mb-4 text-sm">
+            <div className="bg-red-100 text-black p-4 rounded-lg mb-4 text-base font-bold border-2 border-red-400">
               {authError}
             </div>
           )}
           
-          <form onSubmit={handleAuth} className="space-y-4">
+          <form onSubmit={handleAuth} className="space-y-5">
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="password" className="block text-lg font-bold text-black mb-2">
                 Password
               </label>
               <input
@@ -121,20 +121,21 @@ const handleAnalyzeReport = async () => {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                className="w-full px-4 py-3 border-2 border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-primary-600 text-black text-lg"
+                placeholder="Enter password"
               />
             </div>
             
             <button
               type="submit"
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+              className="w-full bg-gradient-to-r from-primary-700 to-primary-800 text-white py-3 px-5 rounded-lg hover:from-primary-800 hover:to-primary-900 font-extrabold transition-all shadow-md hover:shadow-lg text-lg"
             >
               Access Application
             </button>
           </form>
           
-          <div className="mt-4 text-center text-sm text-gray-500">
-            Hint: The password is Password123
+          <div className="mt-5 text-center text-base font-semibold text-black">
+            Hint: The password is <span className="font-extrabold">Password123</span>
           </div>
         </div>
       </div>
@@ -143,25 +144,27 @@ const handleAnalyzeReport = async () => {
 
   // Main content when authenticated
   return (
-    <main className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-gradient-to-b from-gray-200 to-white py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">MarketMetric</h1>
+        <div className="flex justify-between items-center mb-8 pb-4 border-b-2 border-gray-400">
+          <h1 className="text-4xl font-extrabold text-black">MarketMetric</h1>
           <button 
             onClick={logout}
-            className="text-sm text-gray-600 hover:text-gray-900"
+            className="flex items-center gap-2 text-base text-black hover:text-primary-900 font-black bg-white py-2 px-4 rounded-lg shadow-md border-2 border-gray-600 hover:border-primary-800 transition-all"
           >
+            <FiLogOut className="w-5 h-5" />
             Log out
           </button>
         </div>
         
-        <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-          <h2 className="text-xl font-semibold mb-4">Upload Market Report</h2>
+        <div className="bg-white p-7 rounded-xl shadow-md mb-8 border-2 border-gray-400">
+          <h2 className="text-3xl font-extrabold mb-5 text-black">Upload Market Report</h2>
           <FileUpload onFileUploaded={handleFileUploaded} />
           
           {uploadedFile && (
-            <div className="mt-4">
-              <p className="text-green-600 font-medium">
+            <div className="mt-5 p-5 bg-primary-100 rounded-lg border-2 border-primary-500">
+              <p className="text-black font-bold flex items-center gap-2 text-xl">
+                <FiUpload className="w-6 h-6" />
                 Uploaded: {uploadedFile.name}
               </p>
               
@@ -170,17 +173,21 @@ const handleAnalyzeReport = async () => {
                 disabled={analyzing}
                 className={`mt-4 ${
                   analyzing 
-                    ? 'bg-gray-400 cursor-not-allowed' 
-                    : 'bg-blue-600 hover:bg-blue-700'
-                } text-white py-2 px-4 rounded-md flex items-center gap-2`}
+                    ? 'bg-gray-800 cursor-not-allowed' 
+                    : 'bg-gradient-to-r from-blue-900 to-indigo-900 hover:from-blue-950 hover:to-indigo-950'
+                } text-white py-3 px-5 rounded-lg flex items-center gap-3 font-extrabold transition-all shadow-md hover:shadow-lg text-xl`}
+                style={{ textShadow: '0px 1px 2px rgba(0,0,0,0.5)' }}
               >
                 {analyzing ? (
                   <>
-                    <FiLoader className="w-4 h-4 animate-spin" />
-                    Analyzing Report...
+                    <FiLoader className="w-6 h-6 animate-spin" />
+                    <span className="text-white opacity-100">Analyzing Report...</span>
                   </>
                 ) : (
-                  'Analyze Report'
+                  <>
+                    <FiBarChart2 className="w-6 h-6" />
+                    <span className="text-white opacity-100">Analyze Report</span>
+                  </>
                 )}
               </button>
             </div>
@@ -193,7 +200,7 @@ const handleAnalyzeReport = async () => {
         )}
 
         {error && (
-          <div className="mt-4 p-4 bg-red-50 text-red-700 rounded-lg">
+          <div className="mt-4 p-5 bg-red-100 text-black rounded-lg border-2 border-red-400 font-bold text-lg">
             {error}
           </div>
         )}
