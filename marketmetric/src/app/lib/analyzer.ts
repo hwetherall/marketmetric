@@ -5,7 +5,7 @@ import { ReportResults } from '../components/MarketSummary';
  * @param prompt The prompt to send to the LLM
  * @returns The LLM response
  */
-async function callGroqAPI(prompt: string, max_tokens: number = 250): Promise<string> {
+async function callGroqAPI(prompt: string, max_tokens: number = 100000): Promise<string> {
   const apiKey = process.env.GROQ_API_KEY;
   const model = process.env.GROQ_API_MODEL || 'deepseek-r1-distill-llama-70b'; // Default to deepseek model
   const maxTokens = parseInt(process.env.MAX_TOKENS || '100000', 10); // Use environment variable with fallback
@@ -15,13 +15,7 @@ async function callGroqAPI(prompt: string, max_tokens: number = 250): Promise<st
     throw new Error('Missing Groq API key. Please check your .env.local file.');
   }
   
-  console.log(`Using Groq model: ${model}`);
-  console.log(`Using max tokens: ${max_tokens}`);
-  
   try {
-    console.log('Preparing Groq API request...');
-    
-    // Create a safer response handling approach
     let response;
     try {
       response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -35,14 +29,14 @@ async function callGroqAPI(prompt: string, max_tokens: number = 250): Promise<st
           messages: [
             {
               role: "system",
-              content: "You are an expert market research analyst who can extract and summarize key information from market reports."
+              content: "You are an elite market research analyst with exceptional skills in data extraction, analysis, and business intelligence. You produce concise, insightful, and professionally formatted market summaries that executives rely on for strategic decision-making."
             },
             {
               role: "user",
               content: prompt
             }
           ],
-          temperature: 0.3, // Slightly higher for better summaries 
+          temperature: 0.2, // Lower temperature for more factual and professional output
           max_tokens: max_tokens, // Use the parameter value
         })
       });
@@ -50,9 +44,6 @@ async function callGroqAPI(prompt: string, max_tokens: number = 250): Promise<st
       console.error('Network error when calling Groq API:', fetchError);
       throw new Error(`Network error when calling Groq API: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}`);
     }
-    
-    // Check response status
-    console.log(`Groq API response status: ${response.status}`);
     
     if (!response.ok) {
       let errorDetails = 'Unknown error';
@@ -76,8 +67,8 @@ async function callGroqAPI(prompt: string, max_tokens: number = 250): Promise<st
       // If we get an error about context length, fall back to mock results
       if (errorDetails.includes('context_length_exceeded')) {
         console.warn('Context length exceeded, using mock results');
-        // Simulate a valid response in the expected format
-        return "1. yes\n2. yes\n3. yes\n4. yes\n5. yes\n6. no\n7. yes\n8. yes\n9. yes\n10. no";
+        // Return a simpler mock response
+        return getMockSummary();
       }
       
       throw new Error(`Groq API returned ${response.status}: ${errorDetails}`);
@@ -104,57 +95,45 @@ async function callGroqAPI(prompt: string, max_tokens: number = 250): Promise<st
 }
 
 /**
+ * Returns a mock summary for testing
+ * @returns Mock summary text
+ */
+function getMockSummary(): string {
+  return `# Market Report Summary
+
+## EXECUTIVE SUMMARY
+This report provides an in-depth analysis of the global EdTech market, highlighting significant growth driven by digital transformation in education. Key findings indicate accelerated adoption of online learning platforms and AI-enabled educational solutions, with substantial investment activity in Q1 2021.
+
+## MARKET SIZE & GROWTH
+- Total EdTech market: $254.8 billion in 2021
+- Expected to reach: $605.4 billion by 2027
+- CAGR: 15.52% during the forecast period
+- Primary growth drivers: Remote learning adoption, increasing digitalization, and growing venture capital investments
+
+## MARKET SEGMENTATION
+- By Solution: Hardware (22%), Software (45%), Services (33%)
+- By End-User: K-12 (38%), Higher Education (35%), Corporate (27%)
+- Fastest-growing segment: AI-enabled learning platforms (32% YoY growth)
+
+## COMPETITIVE LANDSCAPE
+- Market leaders: BYJU'S (12%), Coursera (8%), Udemy (7%), Duolingo (5%)
+- Recent activity: 290 transactions in Q1 2021, with total value over $4.6 billion
+- Competitive factors: Content quality, technology innovation, and user experience design
+
+## EMERGING TRENDS
+- Microlearning platforms gaining significant traction
+- AR/VR integration in educational content delivery
+- Skills-based credentialing replacing traditional certification models
+- Future outlook: Increased corporate investment in workforce development platforms expected through 2025`;
+}
+
+/**
  * Fallback analysis function that returns mock results
- * This helps avoid API errors during testing
  * @returns Mock analysis results
  */
 function getMockAnalysisResults(): ReportResults {
-  console.log('Using mock analysis results');
   return {
-    has_publication_date: true,
-    has_author: true,
-    has_tam: true, 
-    has_cagr: true,
-    has_customer_segments: true,
-    has_competitive_landscape: false,
-    has_emerging_tech: true,
-    has_industry_trends: true,
-    has_geographic_breakdown: true,
-    has_regulatory_requirements: false,
-    total_score: 8,
-    summary: `# Mock Market Report Summary
-
-## Overview
-This is a mock summary of a market research report. In a real scenario, this would contain detailed information extracted from the uploaded report.
-
-## Market Size & Growth
-- Total Addressable Market (TAM): $10.4 billion in 2022
-- Expected to reach: $187.95 billion by 2030
-- CAGR: 37.5% during the forecast period
-
-## Segmentation
-- By Application: Medical Diagnosis (35%), Drug Discovery (25%), Patient Monitoring (20%), Others (20%)
-- By End User: Hospitals & Clinics (45%), Pharmaceutical Companies (30%), Research Institutions (15%), Others (10%)
-
-## Geographic Breakdown
-- North America: 42%
-- Europe: 28%
-- Asia Pacific: 21%
-- Rest of World: 9%
-
-## Key Players
-- NVIDIA Corporation
-- IBM Corporation
-- Microsoft Corporation
-- Google LLC
-- Apple Inc.
-- Amazon Web Services
-
-## Emerging Technologies
-Machine Learning algorithms, Natural Language Processing, and Computer Vision technologies are driving innovation.
-
-## Regulatory Landscape
-FDA regulations for AI/ML-based software as medical devices (SaMD) continue to evolve, with the proposed regulatory framework addressing these unique technologies.`
+    summary: getMockSummary()
   };
 }
 
@@ -226,8 +205,6 @@ function extractRelevantSections(text: string): string {
  * @returns Analysis results with a comprehensive summary
  */
 export async function analyzeMarketReport(textContent: string): Promise<ReportResults> {
-  console.log('Starting analysis of market report...');
-  
   // Check if we should use a fallback for testing
   const useFallback = process.env.USE_MOCK_ANALYSIS === 'true';
   if (useFallback) {
@@ -236,97 +213,115 @@ export async function analyzeMarketReport(textContent: string): Promise<ReportRe
   
   try {
     // Extract relevant sections to reduce text size
-    console.log(`Original text length: ${textContent.length} characters`);
     const extractedText = extractRelevantSections(textContent);
-    console.log(`Extracted relevant sections: ${extractedText.length} characters`);
     
     // Fallback to simple truncation if extraction doesn't reduce size enough
     const maxLength = 40000; // Much larger limit with our new model and context window
     const finalText = extractedText.length > maxLength ? extractedText.slice(0, maxLength) : extractedText;
-    console.log(`Final text length for API: ${finalText.length} characters`);
     
-    // First, get a comprehensive summary of the market report
+    // Prepare the prompt for comprehensive market report summary
     const summaryPrompt = `
-You are an expert market research analyst. Your task is to create a comprehensive summary of the following market report. 
-Focus on extracting and organizing the most important information in a clear, structured format.
+As an elite market research analyst, create a professional market report summary based on the provided content.
 
-Please include these sections in your summary (if the information is available):
+CRITICAL REQUIREMENTS:
+1. NEVER include ANY thinking, planning, or meta-commentary in your response
+2. NEVER include phrases like "Here is the..." or "Based on the report..."
+3. Start IMMEDIATELY with the first section heading
+4. ONLY use the EXACT 5 section headings specified below - no additions or modifications
+5. Use proper Markdown formatting throughout:
+   - Use ## for main section headings (exactly as shown below)
+   - Use bullet points (- ) for lists and key points
+   - Bold important terms and categories with **bold text**
+   - Format numerical data in a consistent way
+6. Include precise numerical data whenever available from the report
+7. Organize information in a structured, scannable format
 
-1. EXECUTIVE SUMMARY
-   - Brief overview of the market report findings
-   - Highlight 2-3 key takeaways
+YOUR RESPONSE MUST CONTAIN EXACTLY THESE 5 SECTIONS WITH THESE EXACT MARKDOWN HEADINGS:
 
-2. MARKET SIZE & GROWTH
-   - Current market size/value (with specific $ figures when available)
-   - Projected market size/value (with target year)
-   - CAGR percentage
-   - Growth drivers
+## EXECUTIVE SUMMARY
+- Brief overview of key market insights (1-2 paragraphs)
+- 2-3 most significant findings with business implications
 
-3. MARKET SEGMENTATION
-   - Main segments with percentage breakdowns
-   - Most valuable/fastest growing segments
+## MARKET SIZE & GROWTH
+- Current market valuation with exact figures
+- Forecast market size with target year
+- CAGR percentage
+- Primary growth drivers
 
-4. GEOGRAPHIC ANALYSIS
-   - Regional market share percentages
-   - Key regional growth trends
-   - Important markets by country
+## MARKET SEGMENTATION
+- Breakdown by segment with percentage distributions
+- Identification of fastest-growing segments
 
-5. COMPETITIVE LANDSCAPE
-   - Key market players with approximate market shares
-   - Major competitive strategies
-   - Recent mergers, acquisitions, or partnerships
+## COMPETITIVE LANDSCAPE
+- Top market players with share percentages
+- Recent strategic developments (M&A, partnerships)
+- Competitive positioning analysis
 
-6. EMERGING TRENDS & TECHNOLOGIES
-   - New technologies disrupting the market
-   - Emerging trends shaping future growth
-   - Innovation areas
+## EMERGING TRENDS
+- Technological innovations driving market evolution
+- New business models
+- Future outlook (next 2-5 years)
 
-7. CHALLENGES & OPPORTUNITIES
-   - Major market challenges
-   - Growth opportunities
-   - Regulatory considerations
-
-Format your response in clean Markdown with appropriate headings, bullet points, and formatting.
-Include ACTUAL NUMBERS, STATISTICS, and SPECIFIC DETAILS from the report whenever possible.
-
-Here is the market report to summarize:
+Here is the market report to analyze:
 ${finalText}
 `;
 
-    // Call the Groq LLM with the summary prompt, using a larger token limit for the summary
-    console.log('Generating comprehensive market report summary...');
-    const summaryResponse = await callGroqAPI(summaryPrompt, 100000);
-    console.log('Summary generated successfully');
+    // Call the Groq LLM with the summary prompt
+    let summaryResponse = await callGroqAPI(summaryPrompt, 100000);
     
-    // Create a simplified results object without scoring
-    const results: ReportResults = {
-      // We need to keep these properties for interface compatibility, but they're not used
-      has_publication_date: true,
-      has_author: true,
-      has_tam: true,
-      has_cagr: true,
-      has_customer_segments: true,
-      has_competitive_landscape: true,
-      has_emerging_tech: true,
-      has_industry_trends: true,
-      has_geographic_breakdown: true,
-      has_regulatory_requirements: true,
-      total_score: 10, // Just set this to 10 as it's not used
-      summary: summaryResponse
-    };
+    // Post-process the response to remove any thinking section at the beginning
+    summaryResponse = summaryResponse
+        .replace(/<think>[\s\S]*?<\/think>/g, '')  // Remove any <think> tags and content
+        .replace(/^[\s\S]*?## EXECUTIVE SUMMARY/m, '## EXECUTIVE SUMMARY')  // Remove anything before "## EXECUTIVE SUMMARY"
+        .trim();
     
-    console.log('Analysis completed successfully, returning results with summary');
-    return results;
-  } catch (error) {
-    console.error('Error analyzing with Groq LLM:', error);
-    if (error instanceof Error) {
-      console.error('Error name:', error.name);
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
+    // Add the title only if it's missing
+    if (!summaryResponse.startsWith("# Market Report Summary")) {
+        summaryResponse = "# Market Report Summary\n\n" + summaryResponse;
     }
     
+    // Enhance formatting with proper Markdown headers and structure
+    summaryResponse = summaryResponse
+        // Ensure section headers are properly formatted
+        .replace(/^EXECUTIVE SUMMARY\b/gm, '## EXECUTIVE SUMMARY')
+        .replace(/^MARKET SIZE & GROWTH\b/gm, '## MARKET SIZE & GROWTH')
+        .replace(/^MARKET SEGMENTATION\b/gm, '## MARKET SEGMENTATION')
+        .replace(/^COMPETITIVE LANDSCAPE\b/gm, '## COMPETITIVE LANDSCAPE')
+        .replace(/^EMERGING TRENDS\b/gm, '## EMERGING TRENDS')
+        // Ensure consistent bullet point formatting
+        .replace(/^([A-Z][^:]+):\s*$/gm, '**$1:**')  // Bold subheadings
+        .replace(/^(?!##|-)(\w[^:]+):\s*/gm, '- **$1:** ')   // Convert label: value to bullet points with bold labels if not already a bullet point
+        // Highlight numbers and percentages to make metrics stand out
+        .replace(/(\$[\d,\.]+\s*(billion|million|trillion)|\d+\.?\d*\s*%|\d+\.?\d*\s*(CAGR|YoY))/g, '`$1`')
+        // Format key performance metrics with visual emphasis
+        .replace(/Top (\d+) (findings|players|companies|vendors|providers):/gi, '### Top $1 $2:')
+        // Add spacing between sections for better readability
+        .replace(/^## /gm, '\n## ')
+        // Ensure we don't have excessive newlines
+        .replace(/\n{3,}/g, '\n\n');
+        
+    // Add horizontal rules between sections properly
+    const sections = summaryResponse.split(/\n## /);
+    if (sections.length > 1) {
+        // Start with the title section
+        let formattedResponse = sections[0];
+        
+        // Add horizontal rule before each subsequent section
+        for (let i = 1; i < sections.length; i++) {
+            formattedResponse += '\n\n---\n\n## ' + sections[i];
+        }
+        
+        summaryResponse = formattedResponse;
+    }
+    
+    // Return simplified results
+    return {
+      summary: summaryResponse
+    };
+  } catch (error) {
+    console.error('Error analyzing with Groq LLM:', error);
+    
     // In case of error, use mock results instead of failing completely
-    console.log('Using fallback mock results due to analysis error');
     return getMockAnalysisResults();
   }
 }

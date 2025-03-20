@@ -13,20 +13,38 @@ interface MarketSummaryProps {
 
 export default function MarketSummary({ results, reportName }: MarketSummaryProps) {
   return (
-    <div className="bg-white p-8 rounded-xl shadow-md border-2 border-gray-400">
-      <div className="flex items-center gap-3 mb-6">
-        <FiFileText className="w-7 h-7 text-primary-800" />
-        <h2 className="text-3xl font-extrabold text-black">Market Report Summary</h2>
-      </div>
-      
-      <div className="flex items-center mb-6">
-        <p className="text-gray-700 font-bold text-xl">{reportName}</p>
+    <div className="bg-white p-10 rounded-xl shadow-lg border border-gray-300">
+      <div className="flex items-center gap-3 mb-8 border-b pb-5 border-gray-200">
+        <FiFileText className="w-8 h-8 text-primary-800" />
+        <div>
+          <h2 className="text-3xl font-extrabold text-primary-900">Market Report Summary</h2>
+          <p className="text-gray-600 text-lg mt-1">{reportName}</p>
+        </div>
       </div>
       
       {/* Report Summary Section */}
       {results.summary && (
         <div className="bg-white rounded-lg">
-          <div className="prose prose-lg max-w-none text-black prose-headings:text-primary-800 prose-headings:font-bold prose-h1:text-3xl prose-h2:text-2xl prose-h2:mt-6 prose-p:text-gray-700 prose-li:text-gray-700 prose-strong:text-black">
+          <div className="prose prose-lg max-w-none text-black
+            prose-headings:text-black
+            prose-headings:font-bold 
+            prose-h1:text-3xl 
+            prose-h1:border-b 
+            prose-h1:border-gray-200 
+            prose-h1:pb-2
+            prose-h1:mb-6
+            prose-h2:text-2xl 
+            prose-h2:mt-8 
+            prose-h2:mb-4
+            prose-p:text-black
+            prose-p:leading-relaxed
+            prose-li:text-black
+            prose-li:my-1
+            prose-strong:text-black
+            prose-strong:font-semibold
+            prose-ul:ml-2
+            prose-ol:ml-2
+            prose-a:text-blue-700">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {results.summary}
             </ReactMarkdown>
