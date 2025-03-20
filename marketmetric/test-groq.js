@@ -9,7 +9,8 @@ async function testGroqConnection() {
   // Get API key and settings from environment variables
   const apiKey = process.env.GROQ_API_KEY;
   const baseURL = 'https://api.groq.com'; // Fixed base URL
-  const model = process.env.GROQ_API_MODEL || 'llama3-8b-8192';
+  const model = process.env.GROQ_API_MODEL || 'deepseek-r1-distill-llama-70b';
+  const maxTokens = parseInt(process.env.MAX_TOKENS || '100000', 10);
   
   // Check if API key is set
   if (!apiKey) {
@@ -21,6 +22,7 @@ async function testGroqConnection() {
   console.log(`Using API key starting with: ${apiKey.substring(0, 4)}***`);
   console.log(`Using base URL: ${baseURL}`);
   console.log(`Using model: ${model}`);
+  console.log(`Using max tokens: ${maxTokens}`);
   
   try {
     // Initialize Groq client
@@ -41,7 +43,7 @@ async function testGroqConnection() {
         }
       ],
       temperature: 0.5,
-      max_tokens: 50,
+      max_tokens: 50, // Using a small value for the test response
     });
     
     // Check response

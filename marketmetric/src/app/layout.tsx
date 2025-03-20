@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { SimpleAuthProvider } from "./context/SimpleAuthContext";
 
 // Load Inter font with slightly heavier default weights for better visibility
 const inter = Inter({
@@ -24,7 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} antialiased`}>
-        <SimpleAuthProvider>{children}</SimpleAuthProvider>
+        {children}
       </body>
     </html>
   );

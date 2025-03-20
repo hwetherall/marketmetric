@@ -18,92 +18,98 @@ export default function FileUpload({ onFileUploaded }: FileUploadProps) {
     async (acceptedFiles: File[]) => {
       if (acceptedFiles.length === 0) return;
 
-      const file = acceptedFiles[0];
-      
-      // Check if the file is a PDF
-      if (file.type !== 'application/pdf') {
-        setError('Please upload a PDF file');
-        return;
-      }
-
       setUploading(true);
       setError(null);
       setUsingFallback(false);
       
-      try {
-        // Try server-side upload API first
-        const formData = new FormData();
-        formData.append('file', file);
-        
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
-        });
-        
-        const result = await response.json();
-        
-        if (!response.ok) {
-          throw new Error(result.error || 'Server upload failed');
-        }
-        
-        // Successfully uploaded through server API
-        onFileUploaded(result.filePath, result.fileName);
-        
-      } catch (serverErr) {
-        console.error('Server upload failed, trying direct Supabase upload:', serverErr);
-        
+      // Process each file in sequence
+      for (const file of acceptedFiles) {
         try {
-          // Try to upload directly to Supabase
-          const fileName = `${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
-          
-          const { data, error: uploadError } = await supabase.storage
-            .from('market-reports')
-            .upload(`reports/${fileName}`, file);
-          
-          if (uploadError) {
-            throw uploadError;
+          // Check if the file is a PDF
+          if (file.type !== 'application/pdf') {
+            console.warn(`Skipping non-PDF file: ${file.name}`);
+            continue;
           }
           
-          // Direct upload successful
-          onFileUploaded(data.path, file.name);
+          // Try server-side upload API first
+          const formData = new FormData();
+          formData.append('file', file);
           
-        } catch (uploadErr) {
-          console.error('Direct upload failed, using local fallback:', uploadErr);
-          setUsingFallback(true);
-          setError('Using local storage (size limited). For large files, refresh and try again.');
+          const response = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData,
+          });
+          
+          const result = await response.json();
+          
+          if (!response.ok) {
+            throw new Error(result.error || 'Server upload failed');
+          }
+          
+          // Successfully uploaded through server API
+          onFileUploaded(result.filePath, result.fileName);
+          
+        } catch (serverErr) {
+          console.error('Server upload failed, trying direct Supabase upload:', serverErr);
           
           try {
-            // Local storage as last resort - check file size first
-            if (file.size > 4 * 1024 * 1024) { // 4MB max for safety
-              setError('File too large for local storage. Please try again or use a smaller file.');
-              return;
+            // Try to upload directly to Supabase
+            const fileName = `${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+            
+            const { data, error: uploadError } = await supabase.storage
+              .from('market-reports')
+              .upload(`reports/${fileName}`, file);
+            
+            if (uploadError) {
+              throw uploadError;
             }
             
-            const fileName = `${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
-            const reader = new FileReader();
+            // Direct upload successful
+            onFileUploaded(data.path, file.name);
             
-            reader.onload = function(event) {
-              if (event.target && event.target.result) {
-                try {
-                  sessionStorage.setItem(`file_${fileName}`, event.target.result as string);
-                  
-                  // Create a mock file path and notify parent
-                  const mockFilePath = `local/${fileName}`;
-                  onFileUploaded(mockFilePath, file.name);
-                } catch (storageErr) {
-                  setError('Browser storage limit exceeded. Try a smaller file or refresh the page.');
-                }
+          } catch (uploadErr) {
+            console.error('Direct upload failed, using local fallback:', uploadErr);
+            setUsingFallback(true);
+            
+            try {
+              // Local storage as last resort - check file size first
+              if (file.size > 4 * 1024 * 1024) { // 4MB max for safety
+                setError('File too large for local storage. Please try again or use a smaller file.');
+                continue;
               }
-            };
-            
-            reader.readAsDataURL(file);
-          } catch (localErr) {
-            setError('All upload methods failed. Please try again later.');
+              
+              const fileName = `${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+              const reader = new FileReader();
+              
+              await new Promise<void>((resolve, reject) => {
+                reader.onload = function(event) {
+                  if (event.target && event.target.result) {
+                    try {
+                      sessionStorage.setItem(`file_${fileName}`, event.target.result as string);
+                      
+                      // Create a mock file path and notify parent
+                      const mockFilePath = `local/${fileName}`;
+                      onFileUploaded(mockFilePath, file.name);
+                      resolve();
+                    } catch (storageErr) {
+                      setError('Browser storage limit exceeded. Try a smaller file or refresh the page.');
+                      reject(storageErr);
+                    }
+                  }
+                };
+                
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+              });
+            } catch (localErr) {
+              console.error('Local storage upload failed:', localErr);
+              setError('Some files could not be uploaded. Please try again later.');
+            }
           }
         }
-      } finally {
-        setUploading(false);
       }
+      
+      setUploading(false);
     },
     [onFileUploaded]
   );
@@ -113,7 +119,7 @@ export default function FileUpload({ onFileUploaded }: FileUploadProps) {
     accept: {
       'application/pdf': ['.pdf'],
     },
-    maxFiles: 1,
+    maxFiles: 10, // Allow multiple files (up to 10)
     disabled: uploading,
   });
 
@@ -140,16 +146,17 @@ export default function FileUpload({ onFileUploaded }: FileUploadProps) {
           )}
           
           {uploading ? (
-            <p className="text-black font-black text-xl">Uploading your report...</p>
+            <p className="text-black font-black text-xl">Uploading your reports...</p>
           ) : (
             <>
               <p className="mb-3 text-black font-black text-2xl">
-                {isDragActive ? 'Drop your PDF report here' : 'Drag & drop a market report PDF here'}
+                {isDragActive ? 'Drop your PDF reports here' : 'Drag & drop market report PDFs here'}
               </p>
               <div className="flex items-center gap-2 text-base font-extrabold text-black bg-gray-300 py-3 px-5 rounded-full border-2 border-gray-500">
                 <FiFile className="text-primary-900 w-5 h-5" />
-                <span>or click to select a file (PDF only)</span>
+                <span>or click to select files (PDF only)</span>
               </div>
+              <p className="mt-2 text-sm text-gray-700">You can upload multiple files at once</p>
             </>
           )}
           {error && (

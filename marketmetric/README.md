@@ -32,7 +32,7 @@ The LLM evaluates market reports based on these criteria:
 - **Backend**: Supabase (PostgreSQL)
 - **Storage**: Supabase Storage
 - **Authentication**: Supabase Auth
-- **LLM**: Groq API with deepseek-r1-distill-llama-70b
+- **LLM**: Groq API with deepseek-r1-distill-llama-70b (100k token context window)
 - **PDF Processing**: pdf-parse
 
 ## Getting Started
@@ -47,8 +47,8 @@ The LLM evaluates market reports based on these criteria:
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    GROQ_API_KEY=your_groq_api_key
-   GROQ_API_BASE_URL=https://api.groq.com/openai/v1
    GROQ_API_MODEL=deepseek-r1-distill-llama-70b
+   MAX_TOKENS=100000
    ```
 4. Run the development server:
    ```
